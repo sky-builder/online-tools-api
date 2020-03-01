@@ -5,6 +5,7 @@ const fs = require('fs');
 const cryptoJs = require('crypto-js');
 const axios = require('axios');
 const cors = require('cors')
+const puppeteer = require('puppeteer');
 
 app.use(cors());
 app.get('/history-today/:month/:day', (req, res) => {
@@ -28,6 +29,43 @@ app.get('/bing-daily-photo', (req, res) => {
     console.log(err);
     res.send(err)
   })
+})
+app.get('/download-ig-image', (req, res) => {
+  let url = req.query.url;
+  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
+  // use tor
+  //const browser = await puppeteer.launch({args:['--proxy-server=socks5://127.0.0.1:9050']});
+  const page = await browser.newPage();
+  //page.on('request', (request) => {
+    //console.log(`Intercepting: ${request.method} ${request.url}`);
+   // request.continue();
+  //});
+  await page.goto(url, {waitUntil: 'networkidle2'});
+
+  //const title = await page.title();
+  //console.log(title);
+  //await page.screenshot({path:'example.png'});
+  const imgs = await page.$$eval('img.FFVAD[src]', imgs => imgs.map(img => img.getAttribute('src')));
+  if (imgs && imgs[0]) {
+    axios.get(imgs[0], {
+      responseType: 'stream'
+    })
+    .then(resp => {
+      resp.data.pipe(res)
+      .on('finish', () => {
+        res.end('done')
+      })
+      .on('error', () => {
+        res.end('error')
+      })
+    })
+  } else {
+    res.end('no image found.')
+  }
+  // const html = await page.content();
+        // fs.writeFileSync(path.join(__dirname,'ig.html'), html);
+
+  browser.close();
 })
 
 app.listen(3001);
