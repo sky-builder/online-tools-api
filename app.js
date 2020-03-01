@@ -30,7 +30,7 @@ app.get('/bing-daily-photo', (req, res) => {
     res.send(err)
   })
 })
-app.get('/download-ig-image', (req, res) => {
+app.get('/download-ig-image', async (req, res) => {
   let url = req.query.url;
   const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
   // use tor
