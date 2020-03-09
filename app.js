@@ -30,42 +30,43 @@ app.get('/bing-daily-photo', (req, res) => {
     res.send(err)
   })
 })
-app.get('/download-ig-image', async (req, res) => {
-  let url = req.query.url;
-  const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
-  // use tor
-  //const browser = await puppeteer.launch({args:['--proxy-server=socks5://127.0.0.1:9050']});
+puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']})
+.then(async (browser) => {
   const page = await browser.newPage();
-  //page.on('request', (request) => {
-    //console.log(`Intercepting: ${request.method} ${request.url}`);
-   // request.continue();
-  //});
-  await page.goto(url, {waitUntil: 'networkidle2'});
+  app.get('/download-ig-image', async (req, res) => {
+    let url = req.query.url;
+    // use tor
+    //const browser = await puppeteer.launch({args:['--proxy-server=socks5://127.0.0.1:9050']});
+    //page.on('request', (request) => {
+      //console.log(`Intercepting: ${request.method} ${request.url}`);
+    // request.continue();
+    //});
+    // await page.goto(url, {waitUntil: 'networkidle2'});
+    await page.goto(url);
 
-  //const title = await page.title();
-  //console.log(title);
-  //await page.screenshot({path:'example.png'});
-  const imgs = await page.$$eval('img.FFVAD[src]', imgs => imgs.map(img => img.getAttribute('src')));
-  if (imgs && imgs[0]) {
-    axios.get(imgs[0], {
-      responseType: 'stream'
-    })
-    .then(resp => {
-      resp.data.pipe(res)
-      .on('finish', () => {
-        res.end('done')
+    //const title = await page.title();
+    //console.log(title);
+    //await page.screenshot({path:'example.png'});
+    const imgs = await page.$$eval('img.FFVAD[src]', imgs => imgs.map(img => img.getAttribute('src')));
+    if (imgs && imgs[0]) {
+      axios.get(imgs[0], {
+        responseType: 'stream'
       })
-      .on('error', () => {
-        res.end('error')
+      .then(resp => {
+        resp.data.pipe(res)
+        .on('finish', () => {
+          res.end('done')
+        })
+        .on('error', () => {
+          res.end('error')
+        })
       })
-    })
-  } else {
-    res.end('no image found.')
-  }
-  // const html = await page.content();
-        // fs.writeFileSync(path.join(__dirname,'ig.html'), html);
-
-  browser.close();
+    } else {
+      res.end('no image found.')
+    }
+    // const html = await page.content();
+    // fs.writeFileSync(path.join(__dirname,'ig.html'), html);
+  })
 })
 
 app.listen(3001);
