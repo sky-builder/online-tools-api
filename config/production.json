@@ -1,0 +1,5 @@
+{
+  "cors": {
+    "origin": ["http://magisk.tech", "https://magisk.tech", "http://www.magisk.tech", "http://magisk.tech"]
+  }
+}

@@ -6,8 +6,10 @@ const cryptoJs = require('crypto-js');
 const axios = require('axios');
 const cors = require('cors')
 const puppeteer = require('puppeteer');
-
-app.use(cors());
+const config = require('config');
+const corsConfig = config.get('cors');
+console.log(corsConfig);
+app.use(cors(corsConfig));
 app.get('/history-today/:month/:day', (req, res) => {
   let { month, day } = req.params;
   let fileName = `${month}月${day}日.json`;
